@@ -46,4 +46,14 @@ public class Category {
 
         child.setParent(this);
     }
+
+    public void addItem(Item item){
+        if(!this.itemList.contains(item)){
+            this.itemList.add(item);
+        }
+
+        if(!item.getCategoryList().contains(this)){
+            item.getCategoryList().add(this);
+        }
+    }
 }

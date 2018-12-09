@@ -15,7 +15,7 @@ public class Delivery {
     @GeneratedValue
     private int id;
 
-    @OneToOne(mappedBy = "delivery")
+    @OneToOne(mappedBy = "delivery", fetch = FetchType.LAZY)
     private Order order;
 
     private String city;

@@ -21,7 +21,7 @@ public class Order {
 	@GeneratedValue
 	private int id;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 

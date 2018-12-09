@@ -20,9 +20,93 @@ public class Main {
 		emf = new AutoScanProvider().createEntityManagerFactory("jpastudy");
 
 		run(Main::setUp);
-		run(Main::addCategory);
+//		run(Main::addCategory);
+//		run(Main::연관관계의주인이아닌쪽에서컨트롤_OneToMany);
+//		run(Main::연관관계의주인이아닌쪽에서컨트롤_ManyToMany);
+		run(Main::oneToOneLazyLoading);
 
 		emf.close();
+	}
+
+	public static void oneToOneLazyLoading(EntityManager em){
+		Order order = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		Delivery delivery = Delivery.builder()
+				.city("방콕씨리아캔스탑")
+				.street("월스트리트")
+				.zipCode("111-1111")
+				.build();
+
+		em.persist(delivery);
+		order.setDelivery(delivery);
+
+		em.persist(order);
+
+		// 저장하고 영속성 컨텍스트 제거
+		em.flush();
+		em.clear();
+
+		// delivery 조회하면 order 까지 같이 조회됨
+//		Delivery foundDelivery = em.find(Delivery.class, 1);
+//		assertThat(foundDelivery.getCity(), is("방콕씨리아캔스탑"));
+
+		// lazy loading start 이후에 delivery 조회됨
+		Order foundOrder = em.find(Order.class, 2);
+		assertThat(foundOrder.getStatus(), is(OrderStatus.ORDER));
+
+		System.out.println("::::: lazy loading start ::::::");
+		assertThat(foundOrder.getDelivery().getCity(), is("방콕씨리아캔스탑"));
+	}
+
+	public static void 연관관계의주인이아닌쪽에서컨트롤_OneToMany(EntityManager em){
+		Member member = Member.builder()
+				.city("sungnam")
+				.street("신수로")
+				.zipCode("200")
+				.build();
+
+		Order order = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		member.addOrder(order);
+
+		em.persist(member);
+
+		assertNull(em.find(Order.class, 1));
+
+		order.setMember(member);
+		em.persist(order);
+
+		assertNotNull(em.find(Order.class, 2)); // 왜 2가 된걸까
+	}
+
+	public static void 연관관계의주인이아닌쪽에서컨트롤_ManyToMany(EntityManager em){
+		Category category = Category.builder()
+				.name("meat")
+				.parent(null)
+				.build();
+
+		Item item = Item.builder()
+				.name("청바지")
+				.price(50000)
+				.stockQuantity(100)
+				.build();
+
+		em.persist(category);
+		em.persist(item);
+
+		// item만이 control 할 수 있다
+//		category.getItemList().add(item);
+		item.getCategoryList().add(category);
+
+		// 편의메서드가 반대편 리스트에 add 까지 해주므로 결국 연관관계의 주인이 컨트롤 하는 꼴이 된다
+//		category.addItem(item);
+//		item.addCategory(category);
 	}
 
 	private static void addCategory(EntityManager em){
@@ -85,6 +169,7 @@ public class Main {
 	}
 
 	private static void setUp(EntityManager em){
+		/*
 		// member add
 		Member member1 = Member.builder()
 				.city("sungnam")
@@ -148,6 +233,7 @@ public class Main {
 		em.persist(orderItem3);
 
 		System.out.println("::::::::::::::::::::::::::::::SETUP END::::::::::::::::::::::::::::::::");
+		*/
 	}
 
 	private static void run(Consumer<EntityManager> runner) {
