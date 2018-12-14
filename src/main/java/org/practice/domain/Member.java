@@ -1,4 +1,4 @@
-package org.jpastudy.domain;
+package org.practice.domain;
 
 import lombok.*;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name="MEMBER")
-public class Member {
+public class Member extends BaseEntity{
 	@Id
 	@GeneratedValue
 	private int id;

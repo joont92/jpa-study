@@ -1,4 +1,4 @@
-package org.jpastudy.domain;
+package org.practice.domain;
 
 /**
  * Created by naver on 2018. 11. 24..

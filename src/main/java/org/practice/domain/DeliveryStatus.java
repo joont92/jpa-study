@@ -1,4 +1,4 @@
-package org.jpastudy.domain;
+package org.practice.domain;
 
 public enum DeliveryStatus {
     READY, COMP

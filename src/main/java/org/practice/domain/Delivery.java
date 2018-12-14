@@ -1,4 +1,4 @@
-package org.jpastudy.domain;
+package org.practice.domain;
 
 import lombok.*;
 
@@ -29,5 +29,6 @@ public class Delivery {
 
     public void setOrder(Order order){
         this.order = order;
+//        order.setDelivery(this);
     }
 }

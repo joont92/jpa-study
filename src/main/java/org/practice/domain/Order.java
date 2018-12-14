@@ -1,4 +1,4 @@
-package org.jpastudy.domain;
+package org.practice.domain;
 
 import lombok.*;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name="ORDER_")
-public class Order {
+public class Order extends BaseEntity{
 	@Id
 	@GeneratedValue
 	private int id;
@@ -46,7 +46,7 @@ public class Order {
 
 		this.member = member;
 
-		if(!member.getOrderList().contains(this)){
+		if(member != null && !member.getOrderList().contains(this)){
 			member.getOrderList().add(this);
 		}
 	}
@@ -61,6 +61,6 @@ public class Order {
 
 	public void setDelivery(Delivery delivery){
 		this.delivery = delivery;
-		delivery.setOrder(this);
+//		delivery.setOrder(this);
 	}
 }

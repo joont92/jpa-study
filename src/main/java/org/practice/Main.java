@@ -1,6 +1,7 @@
-package org.jpastudy;
+package org.practice;
 
-import org.jpastudy.domain.*;
+import org.practice.domain.*;
+import org.practice.domain.item.Album;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -19,13 +20,31 @@ public class Main {
 	public static void main(String args[]) {
 		emf = new AutoScanProvider().createEntityManagerFactory("jpastudy");
 
-		run(Main::setUp);
+//		run(Main::setUp);
 //		run(Main::addCategory);
 //		run(Main::연관관계의주인이아닌쪽에서컨트롤_OneToMany);
 //		run(Main::연관관계의주인이아닌쪽에서컨트롤_ManyToMany);
-		run(Main::oneToOneLazyLoading);
+//		run(Main::연관관계주인의접근범위);
+//		run(Main::oneToOneLazyLoading);
+//		run(Main::연관관계의주인이아닌쪽에서컨트롤_OneToOne);
+		run(Main::singleDtype);
 
 		emf.close();
+	}
+
+	public static void singleDtype(EntityManager em){
+		Album album = Album.builder()
+				.artist("album")
+				.etc("etc")
+				.build();
+
+		em.persist(album);
+
+		em.flush();
+		em.clear();
+
+		Album foundAlbum = em.find(Album.class, 1);
+		assertThat(foundAlbum.getArtist(), is("album"));
 	}
 
 	public static void oneToOneLazyLoading(EntityManager em){
@@ -61,6 +80,61 @@ public class Main {
 		assertThat(foundOrder.getDelivery().getCity(), is("방콕씨리아캔스탑"));
 	}
 
+	public static void 연관관계주인의접근범위(EntityManager em){
+		Member member = Member.builder()
+				.city("sungnam")
+				.street("신수로")
+				.zipCode("200")
+				.build();
+		em.persist(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		order1.setMember(member);
+		order2.setMember(member);
+
+		em.persist(order1);
+		em.persist(order2);
+
+		em.flush();
+		em.clear();
+
+		// member를 통해 얻은 order
+		Order foundOrder = em.find(Member.class, 1)
+				.getOrderList().get(0);
+		foundOrder.setMember(null);
+		em.remove(foundOrder);
+	}
+
+	public static void 연관관계의주인이아닌쪽에서컨트롤_OneToOne(EntityManager em) {
+		Delivery delivery = Delivery.builder()
+				.city("방콕씨리아캔스탑")
+				.street("월스트리트")
+				.zipCode("111-1111")
+				.build();
+
+		Order order = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		em.persist(delivery);
+
+		order.setDelivery(delivery);
+
+		em.persist(order);
+
+//		delivery.setOrder(order);
+
+	}
+
 	public static void 연관관계의주인이아닌쪽에서컨트롤_OneToMany(EntityManager em){
 		Member member = Member.builder()
 				.city("sungnam")
@@ -86,6 +160,7 @@ public class Main {
 	}
 
 	public static void 연관관계의주인이아닌쪽에서컨트롤_ManyToMany(EntityManager em){
+		/*
 		Category category = Category.builder()
 				.name("meat")
 				.parent(null)
@@ -100,6 +175,7 @@ public class Main {
 		em.persist(category);
 		em.persist(item);
 
+
 		// item만이 control 할 수 있다
 //		category.getItemList().add(item);
 		item.getCategoryList().add(category);
@@ -107,6 +183,14 @@ public class Main {
 		// 편의메서드가 반대편 리스트에 add 까지 해주므로 결국 연관관계의 주인이 컨트롤 하는 꼴이 된다
 //		category.addItem(item);
 //		item.addCategory(category);
+
+		em.flush();
+		em.clear();
+
+		Item foundItem = em.find(Item.class, 2);
+//		foundItem.getCategoryList().remove(0);
+		assertThat(foundItem.getCategoryList().size(), is(1));
+		*/
 	}
 
 	private static void addCategory(EntityManager em){

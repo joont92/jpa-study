@@ -1,4 +1,4 @@
-package org.jpastudy;
+package org.practice;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * org.jpastudy 패키지 아래의 모든 Entity 클래스들을 스캐닝해주는 Provider입니다
+ * org.practice 패키지 아래의 모든 Entity 클래스들을 스캐닝해주는 Provider입니다
  * 스프링 안붙이면 스캐닝이 안돼서 대충 만들어뒀습니다
  */
 public class AutoScanProvider extends HibernatePersistenceProvider {
@@ -27,14 +27,14 @@ public class AutoScanProvider extends HibernatePersistenceProvider {
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
 																		 Map integration, ClassLoader providedClassLoader) {
 
-		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.jpastudy"));
+		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.practice"));
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	@Override
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
 																		 Map integration, ClassLoaderService providedClassLoaderService) {
-		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.jpastudy"));
+		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.practice"));
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
