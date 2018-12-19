@@ -9,17 +9,15 @@ import java.util.List;
 /**
  * Created by naver on 2018. 11. 20..
  */
-//@Builder
-//@NoArgsConstructor(access = AccessLevel.PROTECTED)
-//@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @Entity
-/*
 @Table(name="ITEM")
-*/
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "DTYPE")
-public abstract class Item {
+//@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+//@DiscriminatorColumn(name = "DTYPE")
+public /* abstract */ class Item {
 	@Id
 	@GeneratedValue
 	private int id;
@@ -30,7 +28,7 @@ public abstract class Item {
 
 	public long stockQuantity;
 
-//	@Builder.Default
+	@Builder.Default
 	@ManyToMany
 	@JoinTable(name = "CATEGORY_ITEM",
 			joinColumns = @JoinColumn(name = "item_id"),

@@ -1,9 +1,8 @@
-package org.example.domain.embeddedid;
+package org.example.domain.linktable;
 
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -11,13 +10,13 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @Entity
-public class A {
+public class B {
     @Id
-    private String aId;
+    private String id;
 
-    @OneToMany
+    @ManyToOne
     @JoinTable(name = "a_b",
             joinColumns = @JoinColumn(name = "a_id"),
             inverseJoinColumns = @JoinColumn(name = "b_id"))
-    private List<B> bList = new ArrayList<>();
+    private A a;
 }

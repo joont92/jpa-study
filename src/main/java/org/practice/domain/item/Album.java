@@ -6,11 +6,11 @@ import org.practice.domain.Item;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-@Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+//@Builder
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
+//@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-@Entity
+//@Entity
 @DiscriminatorValue("A")
 public class Album extends Item {
     public Album(String artist) {

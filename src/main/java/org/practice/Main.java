@@ -27,12 +27,112 @@ public class Main {
 //		run(Main::연관관계주인의접근범위);
 //		run(Main::oneToOneLazyLoading);
 //		run(Main::연관관계의주인이아닌쪽에서컨트롤_OneToOne);
-		run(Main::singleDtype);
+//		run(Main::singleDtype);
+//		run(Main::checkLazyInitializeTime);
+//		run(Main::연관관계_설정시_불필요한sql호출체크);
+		run(Main::cascadeRelationSet);
 
 		emf.close();
 	}
 
+	public static void cascadeRelationSet(EntityManager em){
+		Item item = Item.builder()
+				.name("청바지")
+				.price(50000)
+				.stockQuantity(100)
+				.build();
+		em.persist(item);
+
+		Order order = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		OrderItem orderItem1 = OrderItem.builder()
+				.orderPrice(1000)
+				.item(item)
+				.build();
+		OrderItem orderItem2 = OrderItem.builder()
+				.orderPrice(2000)
+				.item(item)
+				.build();
+
+//		order.getOrderItemList().add(orderItem1);
+//		order.getOrderItemList().add(orderItem2);
+		order.addOrderItem(orderItem1);
+		order.addOrderItem(orderItem2);
+
+		em.persist(order);
+
+		em.flush();
+		em.clear();
+
+		Order foundOrder = em.find(Order.class, 2);
+//		assertThat(foundOrder.getOrderItemList().size(), is(2));
+
+		// 변경 감지 체크
+//		foundOrder.getOrderItemList().remove(0);
+
+		OrderItem orderItem3 = OrderItem.builder()
+				.orderPrice(3000)
+				.item(item)
+				.build();
+//		em.persist(orderItem3);
+
+//		foundOrder.getOrderItemList().add(orderItem3);
+		foundOrder.addOrderItem(orderItem3);
+//		em.persist(foundOrder);
+	}
+
+	public static void 연관관계_설정시_불필요한sql호출체크(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("sungnam")
+				.street("신수로")
+				.zipCode("200")
+				.build();
+		em.persist(member);
+
+		em.flush();
+		em.clear();
+
+		Order order = Order.builder()
+				.member(em.getReference(Member.class, 1))
+				.build();
+
+		em.persist(order);
+
+
+	}
+
+	public static void checkLazyInitializeTime(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("sungnam")
+				.street("신수로")
+				.zipCode("200")
+				.build();
+
+		em.persist(member);
+
+		Order order = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		order.setMember(member);
+		em.persist(order);
+
+		em.flush();
+		em.clear();
+
+		Order foundOrder = em.find(Order.class, 2);
+		assertNotNull(foundOrder.getMember());
+		assertThat(foundOrder.getMember().getId(), is(1));
+	}
+
 	public static void singleDtype(EntityManager em){
+		/*
 		Album album = Album.builder()
 				.artist("album")
 				.etc("etc")
@@ -45,6 +145,7 @@ public class Main {
 
 		Album foundAlbum = em.find(Album.class, 1);
 		assertThat(foundAlbum.getArtist(), is("album"));
+		*/
 	}
 
 	public static void oneToOneLazyLoading(EntityManager em){

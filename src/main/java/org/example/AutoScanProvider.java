@@ -27,7 +27,7 @@ public class AutoScanProvider extends HibernatePersistenceProvider {
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
 																		 Map integration, ClassLoader providedClassLoader) {
 
-		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.example.domain.embeddedid"));
+		((ParsedPersistenceXmlDescriptor)persistenceUnitDescriptor).addClasses(getAllClasses("org.example.domain.dtype"));
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 

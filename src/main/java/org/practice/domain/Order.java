@@ -26,7 +26,7 @@ public class Order extends BaseEntity{
 	private Member member;
 
 	@Builder.Default
-	@OneToMany(mappedBy = "order")
+	@OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
 	private List<OrderItem> orderItemList = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)
@@ -35,7 +35,7 @@ public class Order extends BaseEntity{
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "delivery_id")
 	private Delivery delivery;
 
