@@ -12,13 +12,14 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
 @Getter
 @Entity
 @Table(name="MEMBER")
 public class Member extends BaseEntity{
 	@Id
 	@GeneratedValue
-	private int id;
+	private Integer id;
 
 	private String name;
 
@@ -29,7 +30,7 @@ public class Member extends BaseEntity{
 	private String zipCode;
 
 	@Builder.Default
-	@OneToMany(mappedBy = "member")
+	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST, orphanRemoval = true)
 	private List<Order> orderList = new ArrayList<>();
 
 	public void addOrder(Order order){

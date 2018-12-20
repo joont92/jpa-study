@@ -30,9 +30,88 @@ public class Main {
 //		run(Main::singleDtype);
 //		run(Main::checkLazyInitializeTime);
 //		run(Main::연관관계_설정시_불필요한sql호출체크);
-		run(Main::cascadeRelationSet);
+//		run(Main::cascadeRelationSet);
+//		run(Main::changeIdentifier);
+		run(Main::changeIdentifierWithChilds);
 
 		emf.close();
+	}
+
+	public static void changeIdentifierWithChilds(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.persist(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.flush();
+		em.clear();
+
+		Member newMember = Member.builder()
+				.name("joont")
+				.city("city2")
+				.street("street2")
+				.zipCode("zipcode2")
+				.build();
+
+		Member foundMember = em.find(Member.class, 1);
+		newMember.setId(foundMember.getId());
+
+//
+//		foundMember.setCity("changed city"); // ignore
+		// 영향받지 않았음
+		Order foundOrder = em.find(Order.class, 2);
+		assertThat(foundOrder.getMember().getId(), is(1));
+
+		// new order add
+		Order order3 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		newMember.setOrderList(foundMember.getOrderList());
+		newMember.addOrder(order3);
+
+		em.merge(newMember); // merge의 경우 준영속 객체를 영속 객체로 만드는데, id가 있으니까 준영속 객체로 볼 수 있다
+	}
+
+	public static void changeIdentifier(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.persist(member);
+
+		em.flush();
+		em.clear();
+
+		Member newMember = Member.builder()
+				.name("joont")
+				.city("city2")
+				.street("street2")
+				.zipCode("zipcode2")
+				.build();
+
+		Member foundMember = em.find(Member.class, 1);
+		newMember.setId(foundMember.getId());
+
+		em.merge(newMember); // merge의 경우 준영속 객체를 영속 객체로 만드는데, id가 있으니까 준영속 객체로 볼 수 있다
+
+		foundMember.setCity("changed city"); // ignore
 	}
 
 	public static void cascadeRelationSet(EntityManager em){
