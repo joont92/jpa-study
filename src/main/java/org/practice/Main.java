@@ -32,9 +32,21 @@ public class Main {
 //		run(Main::연관관계_설정시_불필요한sql호출체크);
 //		run(Main::cascadeRelationSet);
 //		run(Main::changeIdentifier);
-		run(Main::changeIdentifierWithChilds);
+//		run(Main::changeIdentifierWithChilds);
+		run(Main::mergeActionTest);
 
 		emf.close();
+	}
+
+	public static void mergeActionTest(EntityManager em){
+		Member member = Member.builder()
+//				.id(2)
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.merge(member);
 	}
 
 	public static void changeIdentifierWithChilds(EntityManager em){
