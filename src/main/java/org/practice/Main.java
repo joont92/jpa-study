@@ -33,9 +33,61 @@ public class Main {
 //		run(Main::cascadeRelationSet);
 //		run(Main::changeIdentifier);
 //		run(Main::changeIdentifierWithChilds);
-		run(Main::mergeActionTest);
+		run(Main::cascadeTest);
 
 		emf.close();
+	}
+
+	private static void 준영속Test(EntityManager em){
+		Member member = Member.builder()
+				.id(12)
+				.build();
+
+		em.merge(member);
+	}
+
+	public static void manyToManyCascadeTest(EntityManager em){
+//		Item item = Item.builder()
+//				.name("item1")
+	}
+
+	public static void cascadeTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.persist(member);
+
+		adjust(em);
+
+//		Member givenMember = em.merge(member);
+//		assertNotSame(member, givenMember);
+//		assertTrue(em.contains(givenMember));
+		Member foundMember = em.find(Member.class, 1);
+
+		Order order3 = Order.builder()
+//				.id(2)
+				.status(OrderStatus.CANCEL)
+				.orderDate(new Date())
+				.build();
+
+		foundMember.addOrder(order3);
+
+//		member.setName("test");
 	}
 
 	public static void mergeActionTest(EntityManager em){
@@ -527,5 +579,10 @@ public class Main {
 		} finally {
 			em.close();
 		}
+	}
+
+	private static void adjust(EntityManager em){
+		em.flush();
+		em.clear();
 	}
 }

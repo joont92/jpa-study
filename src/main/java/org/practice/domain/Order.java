@@ -26,7 +26,7 @@ public class Order extends BaseEntity{
 	private Member member;
 
 	@Builder.Default
-	@OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
+	@OneToMany(mappedBy = "order", cascade = CascadeType.MERGE)
 	private List<OrderItem> orderItemList = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)

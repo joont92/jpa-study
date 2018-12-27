@@ -12,12 +12,16 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Table(name = "item")
-@DiscriminatorColumn(name = "DTYPE")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+//@DiscriminatorColumn(name = "DTYPE")
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Item {
     @Id
     @GeneratedValue
     private Long id;
 
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "bag_id")
+    private Bag bag;
 }

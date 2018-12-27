@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Getter
 @Entity
 @Table(name = "movie")
-@DiscriminatorValue("M")
+//@DiscriminatorValue("M")
 public class Movie extends Item{
     private String actor;
 }

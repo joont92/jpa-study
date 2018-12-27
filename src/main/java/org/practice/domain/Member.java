@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name="MEMBER")
 public class Member extends BaseEntity{
 	@Id
-//	@GeneratedValue
+	@GeneratedValue
 	private Integer id;
 
 	private String name;
@@ -30,7 +30,7 @@ public class Member extends BaseEntity{
 	private String zipCode;
 
 	@Builder.Default
-	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST, orphanRemoval = true)
+	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
 	private List<Order> orderList = new ArrayList<>();
 
 	public void addOrder(Order order){

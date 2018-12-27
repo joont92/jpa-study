@@ -15,6 +15,8 @@ public class A {
     @Id
     private String id;
 
+    private String name;
+
     @OneToMany(mappedBy = "a")
     private List<B> bList;
 }
