@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name="MEMBER")
 public class Member extends BaseEntity{
 	@Id
-//	@GeneratedValue
+	@GeneratedValue
 	private Integer id;
 
 	private String name;

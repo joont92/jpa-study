@@ -1,5 +1,6 @@
 package org.practice;
 
+import java.util.List;
 import org.practice.domain.*;
 import org.practice.domain.item.Album;
 
@@ -32,24 +33,13 @@ public class Main {
 //		run(Main::연관관계_설정시_불필요한sql호출체크);
 //		run(Main::cascadeRelationSet);
 //		run(Main::changeIdentifier);
-//		run(Main::changeIdentifierWithChilds);
-		run(Main::mergeActionTest);
+		run(Main::addTest);
+//		run(Main::cascadeTest);
 
 		emf.close();
 	}
 
-	public static void mergeActionTest(EntityManager em){
-		Member member = Member.builder()
-//				.id(2)
-				.name("joont")
-				.city("city1")
-				.street("street1")
-				.zipCode("zipcode1")
-				.build();
-		em.merge(member);
-	}
-
-	public static void changeIdentifierWithChilds(EntityManager em){
+	private static void addTest(EntityManager em){
 		Member member = Member.builder()
 				.name("joont")
 				.city("city1")
@@ -62,12 +52,93 @@ public class Main {
 				.status(OrderStatus.ORDER)
 				.orderDate(new Date())
 				.build();
+		order1.setMember(member);
+		em.persist(order1);
+
 		Order order2 = Order.builder()
 				.status(OrderStatus.ORDER)
 				.orderDate(new Date())
 				.build();
-		member.addOrder(order1);
-		member.addOrder(order2);
+		order2.setMember(member);
+		em.persist(order2);
+
+		em.flush();
+		em.clear();
+
+		Member newMember = Member.builder()
+				.id(1)
+				.name("joont")
+				.city("city2")
+				.street("street2")
+				.zipCode("zipcode2")
+				.build();
+		Member foundMember = em.find(Member.class, 1);
+
+		newMember.getOrderList().addAll(foundMember.getOrderList());
+		em.merge(newMember);
+
+
+	}
+
+	private static void removeTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.persist(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		order1.setMember(member);
+		em.persist(order1);
+
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		order2.setMember(member);
+		em.persist(order2);
+
+		em.flush();
+		em.clear();
+
+		Member foundMember = em.find(Member.class, 1);
+		List<Order> list = foundMember.getOrderList();
+
+
+		for (Order order : list) {
+			em.remove(order);
+		}
+
+		foundMember.getOrderList().clear();
+	}
+
+	private static void changeIdentifierWithChilds(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.persist(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		order1.setMember(member);
+		em.persist(order1);
+
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		order2.setMember(member);
+		em.persist(order2);
 
 		em.flush();
 		em.clear();
@@ -82,21 +153,90 @@ public class Main {
 		Member foundMember = em.find(Member.class, 1);
 		newMember.setId(foundMember.getId());
 
-//
+//		foundMember.getOrderList().clear();
+
+
 //		foundMember.setCity("changed city"); // ignore
 		// 영향받지 않았음
-		Order foundOrder = em.find(Order.class, 2);
-		assertThat(foundOrder.getMember().getId(), is(1));
-
+//		Order foundOrder = em.find(Order.class, 2);
+//		assertThat(foundOrder.getMember().getId(), is(1));
+//
 		// new order add
 		Order order3 = Order.builder()
 				.status(OrderStatus.ORDER)
 				.orderDate(new Date())
 				.build();
-		newMember.setOrderList(foundMember.getOrderList());
+//		newMember.setOrderList(foundMember.getOrderList());
 		newMember.addOrder(order3);
 
 		em.merge(newMember); // merge의 경우 준영속 객체를 영속 객체로 만드는데, id가 있으니까 준영속 객체로 볼 수 있다
+//
+//		em.flush();
+//		em.clear();
+
+//		assertThat(newMember.getOrderList().size(), is(2));
+
+//		foundMember = em.find(Member.class, 1);
+//		assertNotNull(foundMember.getOrderList().get(0));
+	}
+
+	private static void cascadeTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		member = em.merge(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.flush();
+		em.clear();
+
+		member = em.find(Member.class, 1);
+
+		member.getOrderList().clear();
+
+		Order order3 = Order.builder()
+				.id(10)
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+//		Order order4 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+		member.addOrder(order3);
+//		assertThat(member.getOrderList().size(), is(1));
+
+		em.flush();
+		em.clear();
+
+		member = em.find(Member.class, 1);
+		assertThat(member.getOrderList().size(), is(3));
+//		member.addOrder(order4);
+	}
+
+	public static void mergeActionTest(EntityManager em){
+		Member member = Member.builder()
+//				.id(2)
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		em.merge(member);
 	}
 
 	public static void changeIdentifier(EntityManager em){
