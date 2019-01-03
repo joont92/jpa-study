@@ -33,10 +33,49 @@ public class Main {
 //		run(Main::연관관계_설정시_불필요한sql호출체크);
 //		run(Main::cascadeRelationSet);
 //		run(Main::changeIdentifier);
-		run(Main::addTest);
+		run(Main::cascadeTest);
 //		run(Main::cascadeTest);
 
 		emf.close();
+	}
+
+	private static void cascadeTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.city("city1")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		member = em.merge(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.flush();
+		em.clear();
+
+		member = em.find(Member.class, 1);
+
+		member.getOrderList().clear();
+
+		Order order3 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+//		Order order4 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+		member.addOrder(order3);
 	}
 
 	private static void addTest(EntityManager em){
@@ -178,54 +217,6 @@ public class Main {
 
 //		foundMember = em.find(Member.class, 1);
 //		assertNotNull(foundMember.getOrderList().get(0));
-	}
-
-	private static void cascadeTest(EntityManager em){
-		Member member = Member.builder()
-				.name("joont")
-				.city("city1")
-				.street("street1")
-				.zipCode("zipcode1")
-				.build();
-		member = em.merge(member);
-
-		Order order1 = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		Order order2 = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-
-		member.addOrder(order1);
-		member.addOrder(order2);
-
-		em.flush();
-		em.clear();
-
-		member = em.find(Member.class, 1);
-
-		member.getOrderList().clear();
-
-		Order order3 = Order.builder()
-				.id(10)
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-//		Order order4 = Order.builder()
-//				.status(OrderStatus.ORDER)
-//				.orderDate(new Date())
-//				.build();
-		member.addOrder(order3);
-//		assertThat(member.getOrderList().size(), is(1));
-
-		em.flush();
-		em.clear();
-
-		member = em.find(Member.class, 1);
-		assertThat(member.getOrderList().size(), is(3));
-//		member.addOrder(order4);
 	}
 
 	public static void mergeActionTest(EntityManager em){
