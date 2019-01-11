@@ -1,8 +1,9 @@
 package org.practice;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import org.practice.domain.*;
-import org.practice.domain.item.Album;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -33,10 +34,89 @@ public class Main {
 //		run(Main::연관관계_설정시_불필요한sql호출체크);
 //		run(Main::cascadeRelationSet);
 //		run(Main::changeIdentifier);
-		run(Main::cascadeTest);
 //		run(Main::cascadeTest);
+		run(Main::queryDslTest);
 
 		emf.close();
+	}
+
+	private static void queryDslTest(EntityManager em){
+		JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+		QItem item = QItem.item;
+		QMember member = QMember.member;
+		QOrder order = QOrder.order;
+
+		addEntities(em);
+		adjust(em);
+
+		List<Tuple> foundMembers = queryFactory.select(member.name, member.city)
+				.from(member)
+				.fetch();
+
+		System.out.println(foundMembers.get(0).getClass());
+		System.out.println(foundMembers.get(1).getClass());
+	}
+
+	private static void addEntities(EntityManager em){
+		Member member1 = Member.builder()
+				.name("ziont")
+				.city("europe")
+				.street("street1")
+				.zipCode("zipcode1")
+				.build();
+		Member member2 = Member.builder()
+				.name("joont")
+				.city("america")
+				.street("street2")
+				.zipCode("zipcode2")
+				.build();
+		Member member3 = Member.builder()
+				.name("jonathan")
+				.city("seoul")
+				.street("street3")
+				.zipCode("zipcode3")
+				.build();
+		Member member4 = Member.builder()
+				.name("mesh")
+				.city("seoul")
+				.street("street4")
+				.zipCode("zipcode4")
+				.build();
+		em.persist(member1);em.persist(member2);em.persist(member3);em.persist(member4);
+
+		Order order1 = Order.builder()
+				.member(member2)
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.member(member4)
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		em.persist(order1);em.persist(order2);
+
+		Item item1 = Item.builder()
+				.name("청바지")
+				.price(100000)
+				.stockQuantity(100)
+				.build();
+		Item item2 = Item.builder()
+				.name("흰티")
+				.price(30000)
+				.stockQuantity(300)
+				.build();
+		Item item3 = Item.builder()
+				.name("코트")
+				.price(500000)
+				.stockQuantity(10)
+				.build();
+		em.persist(item1);em.persist(item2);em.persist(item3);
+	}
+
+	private static void adjust(EntityManager em){
+		em.flush();
+		em.clear();
 	}
 
 	private static void cascadeTest(EntityManager em){
