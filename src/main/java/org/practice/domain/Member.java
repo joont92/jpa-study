@@ -16,6 +16,10 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name="MEMBER")
+@NamedQuery(
+		name = "Member.findByName",
+		query = "SELECT m FROM Member m WHERE m.name = :name"
+)
 public class Member extends BaseEntity{
 	@Id
 	@GeneratedValue
@@ -23,17 +27,43 @@ public class Member extends BaseEntity{
 
 	private String name;
 
-	private String city;
+	@Embedded
+	private Address homeAddress;
 
-	private String street;
-
-	private String zipCode;
+//	@Embedded
+//	@AttributeOverrides({
+//			@AttributeOverride(name = "city", column = @Column(name = "company_city")),
+//			@AttributeOverride(name = "street", column = @Column(name = "company_street")),
+//			@AttributeOverride(name = "zipcode", column = @Column(name = "company_zipcode"))
+//	})
+//	private Address companyAddress;
 
 	@Builder.Default
-	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
+	@ElementCollection
+	@CollectionTable(
+			name = "FAVORITE_FOOD",
+			joinColumns = @JoinColumn(name = "member_id")
+	)
+	@Column(name = "food_name")
+	private List<String> favoriteFoodList = new ArrayList<>();
+
+	@Builder.Default
+	@ElementCollection
+	@CollectionTable(
+			name = "ADDRESS_HISTORY",
+			joinColumns = @JoinColumn(name = "member_id")
+	)
+	private List<Address> addressHistory = new ArrayList<>();
+
+	@Builder.Default
+	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST, orphanRemoval = true)
 	private List<Order> orderList = new ArrayList<>();
 
 	public void addOrder(Order order){
+		if(this.orderList == null){
+			this.orderList = new ArrayList<>();
+		}
+
 		if(!this.orderList.contains(order)){
 			this.orderList.add(order);
 		}

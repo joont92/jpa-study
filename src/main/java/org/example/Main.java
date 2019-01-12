@@ -5,6 +5,7 @@ import org.example.domain.cascade.GrandChild;
 import org.example.domain.cascade.Parent;
 import org.example.domain.dtype.Album;
 import org.example.domain.dtype.Bag;
+import org.example.domain.dtype.Item;
 import org.example.domain.dtype.Movie;
 import org.example.domain.linktable.A;
 import org.example.domain.linktable.B;
@@ -128,11 +129,14 @@ public class Main {
 		em.flush();
 		em.clear();
 
-		Album foundAlbum = em.find(Album.class, 2L);
-		assertNotNull(foundAlbum);
+//		Album foundAlbum = em.find(Album.class, 2L);
+//		assertNotNull(foundAlbum);
+//
+//		Bag foundBag = em.find(Bag.class, 1L);
+//		assertNotNull(foundBag.getItemList().get(0));
 
-		Bag foundBag = em.find(Bag.class, 1L);
-		assertNotNull(foundBag.getItemList().get(0));
+		Item foundMovie = em.createQuery("select i from Item i where treat(i as Movie).actor = 'actor'", Item.class)
+				.getSingleResult();
 	}
 
 

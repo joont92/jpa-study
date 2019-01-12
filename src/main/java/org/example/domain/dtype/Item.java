@@ -13,7 +13,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "item")
 //@DiscriminatorColumn(name = "DTYPE")
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Item {
     @Id
     @GeneratedValue
