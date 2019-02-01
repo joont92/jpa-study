@@ -1,17 +1,15 @@
 package org.practice;
 
-import java.util.ArrayList;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 
-import com.querydsl.jpa.JPQLQuery;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.practice.domain.*;
-import org.practice.domain.item.Album;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Set;
 import java.util.function.Consumer;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -43,14 +41,191 @@ public class Main {
 //		run(Main::cascadeTest);
 //		run(Main::deleteTest);
 //		run(Main::collectionFetchJoinTest);
-		run(Main::findVSjpql);
+//		run(Main::cascadeTest);
+//		run(Main::nPlus1Test);
+//		nonTransacation();
+//		run(Main::queryDslTest);
+		run(Main::setLazyLoading);
 
 		emf.close();
 	}
 
-	private static void findVSjpql(EntityManager em){
-		memberAdd(em);
-		adjust(em);
+	private static void setLazyLoading(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Member member = em.find(Member.class, 1);
+
+		Order order = Order.builder().build();
+		member.getOrderList().add(order);
+	}
+
+
+	private static void nonTransacation(){
+		run(Main::addEntities);
+
+		EntityManager em = emf.createEntityManager();
+		em.close();
+		Member member = em.find(Member.class, 2);
+		em.clear();
+//		member.getOrderList().get(0);
+	}
+
+	private static void nPlus1Test(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		TypedQuery<Order> query = em.createQuery("select o from Order o inner join o.member", Order.class);
+		List<Order> list = query.getResultList();
+		System.out.println(list.size());
+	}
+
+	private static void jqplFlushTest(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Item item = em.find(Item.class, 7);
+		item.setStockQuantity(10);
+
+		Member member1 = em.find(Member.class, 1);
+		member1.setName("changed");
+
+//		Order order = em.createQuery("SELECT o FROM Order o WHERE o.id = 5", Order.class).getSingleResult();
+		Member member2 = em.createQuery("SELECT o FROM Member o WHERE o.id = 2", Member.class).getSingleResult();
+	}
+
+	private static void nativeQueryTest(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		em.createNativeQuery("SELECT id FROM Item WHERE id=7")
+				.getSingleResult();
+
+	}
+
+	private static void queryDslTest(EntityManager em){
+		JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+		QItem item = QItem.item;
+		QMember member = QMember.member;
+		QMember memberForSubquery = new QMember("memberForSubquery");
+		QOrder order = QOrder.order;
+
+		addEntities(em);
+		apply(em);
+
+		/*
+		List<Tuple> foundMembers = queryFactory.select(member.name, member.homeAddress.city)
+				.from(member)
+				.where(member.name.in(
+						JPAExpressions.select(memberForSubquery.name)
+						.from(memberForSubquery)
+				))
+				.fetch();
+
+		System.out.println(foundMembers.get(0).getClass());
+		System.out.println(foundMembers.get(1).getClass());
+		*/
+
+		List<Member> foundMembers = queryFactory.selectFrom(member)
+				.where((member.name.eq("jonathan").or(member.homeAddress.city.eq("seoul"))).and(member.name.eq("mesh").or(member.homeAddress.city.eq("seoul"))))
+				.fetch();
+		for (Member foundMember : foundMembers) {
+			System.out.println(foundMember.getName()+"::::::::::::::::");
+		}
+	}
+
+	private static void addEntities(EntityManager em){
+		Member member1 = Member.builder()
+				.name("ziont")
+				.homeAddress(new Address("europe", "street1", "zipCode1"))
+				.build();
+		Member member2 = Member.builder()
+				.name("joont")
+				.homeAddress(new Address("america", "street2", "zipCode2"))
+				.build();
+		Member member3 = Member.builder()
+				.name("jonathan")
+				.homeAddress(new Address("seoul", "street3", "zipCode3"))
+				.build();
+		Member member4 = Member.builder()
+				.name("mesh")
+				.homeAddress(new Address("seoul", "street4", "zipCode14"))
+				.build();
+		em.persist(member1);em.persist(member2);em.persist(member3);em.persist(member4);
+
+		Order order1 = Order.builder()
+				.member(member2)
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.member(member4)
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		em.persist(order1);em.persist(order2);
+
+		Item item1 = Item.builder()
+				.name("청바지")
+				.price(100000)
+				.stockQuantity(100)
+				.build();
+		Item item2 = Item.builder()
+				.name("흰티")
+				.price(30000)
+				.stockQuantity(300)
+				.build();
+		Item item3 = Item.builder()
+				.name("코트")
+				.price(500000)
+				.stockQuantity(10)
+				.build();
+		em.persist(item1);em.persist(item2);em.persist(item3);
+	}
+
+	private static void cascadeTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.homeAddress(new Address("seoul", "street", "zipCode1"))
+				.build();
+		member = em.merge(member);
+
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+		Order order2 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.flush();
+		em.clear();
+
+		member = em.find(Member.class, 1);
+
+		member.getOrderList().clear();
+
+		Order order3 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+//		Order order4 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+		member.addOrder(order3);
+	}
+
+	private static void addTest(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.homeAddress(new Address("seoul", "street", "zipCode1"))
+				.build();
+		em.persist(member);
 
 		Member member1 = em.find(Member.class, 1);
 		member1.setName("modified name");
@@ -66,7 +241,7 @@ public class Main {
 
 	private static void possibleProblemOnBulk(EntityManager em){
 		memberAdd(em);
-		adjust(em);
+		apply(em);
 
 		Member member = em.find(Member.class, 1);
 		assertThat(member.getName(), is("joont"));
@@ -82,7 +257,7 @@ public class Main {
 
 	private static void bulkTest(EntityManager em){
 		memberAdd(em);
-		adjust(em);
+		apply(em);
 
 		String sql = "update Member m " +
 				"set m.name = 'seoul-joont' " +
@@ -102,18 +277,9 @@ public class Main {
 		assertThat(resultCount, is(4));
 	}
 
-	private static void queryDslTest(EntityManager em){
-		memberAdd(em);
-		adjust(em);
-
-		QMember member = QMember.member;
-		JPAQuery<Member> query = new JPAQuery<>(em);
-
-	}
-
 	private static void namedQuery(EntityManager em){
 		memberAdd(em);
-		adjust(em);
+		apply(em);
 
 		List<Member> result = em.createNamedQuery("Member.findByName", Member.class)
 				.setParameter("name", "joont")
@@ -196,7 +362,7 @@ public class Main {
 		em.persist(order1);
 		em.persist(order2);
 
-		adjust(em);
+		apply(em);
 
 		Member foundMember = em.find(Member.class, 1);
 		System.out.println(foundMember.getOrderList().getClass());
@@ -210,7 +376,7 @@ public class Main {
 
 		em.persist(delivery);
 
-		adjust(em);
+		apply(em);
 
 		Delivery foundDelivery =
 				em.createQuery("select d from Delivery d where d.deliveryStatus like :status", Delivery.class)
@@ -226,7 +392,7 @@ public class Main {
 
 	}
 
-	private static void collectionFetchJoinTest(EntityManager em){
+	private static void collectionFetchJoinTest(EntityManager em) {
 		Member member = Member.builder()
 				.name("joont")
 				.homeAddress(new Address("city", "street", "zipCode1"))
@@ -243,7 +409,22 @@ public class Main {
 
 		member.addOrder(order1);
 		member.addOrder(order2);
+	}
 
+	public static void mergeActionTest(EntityManager em){
+		Member member = Member.builder()
+//				.id(2)
+				.name("joont")
+				.homeAddress(new Address("city", "street", "zipCode1"))
+				.build();
+		em.merge(member);
+	}
+
+	public static void changeIdentifier(EntityManager em){
+		Member member = Member.builder()
+				.name("joont")
+				.homeAddress(new Address("city", "street", "zipCode1"))
+				.build();
 		em.persist(member);
 
 		Member member_ = Member.builder()
@@ -461,7 +642,7 @@ public class Main {
 //
 //		em.persist(member);
 //
-//		adjust(em);
+//		apply(em);
 //
 ////		Member givenMember = em.merge(member);
 ////		assertNotSame(member, givenMember);
@@ -1109,7 +1290,7 @@ public class Main {
 		}
 	}
 
-	private static void adjust(EntityManager em){
+	private static void apply(EntityManager em){
 		em.flush();
 		em.clear();
 	}
