@@ -56,7 +56,7 @@ public class Member extends BaseEntity{
 	private List<Address> addressHistory = new ArrayList<>();
 
 	@Builder.Default
-	@OneToMany(mappedBy = "member", cascade = CascadeType.PERSIST)
+	@OneToMany(mappedBy = "member")
 	private List<Order> orderList = new ArrayList<>();
 
 	public void addOrder(Order order){

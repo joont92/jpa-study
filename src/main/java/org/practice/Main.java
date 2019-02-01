@@ -94,13 +94,47 @@ public class Main {
 		Member member2 = em.createQuery("SELECT o FROM Member o WHERE o.id = 2", Member.class).getSingleResult();
 	}
 
-	private static void nativeQueryTest(EntityManager em){
+	private static void nativeQueryTest(EntityManager em) {
 		addEntities(em);
 		apply(em);
 
 		em.createNativeQuery("SELECT id FROM Item WHERE id=7")
 				.getSingleResult();
+	}
+	
+	private static void fuckingMergeTest(EntityManager em){
+		addEntities(em);
+		apply(em);
 
+		Member member1 = em.find(Member.class, 1);
+		member1.getOrderList().get(0);
+		Member member2 = Member.builder()
+				.id(1)
+				.name("ziont")
+//				.city("europe")
+//				.street("street1")
+//				.zipCode("zipcode1")
+				.build();
+
+		em.merge(member2);
+
+		System.out.println(":::::::::");
+	}
+
+	private static void proxyObjectTest(EntityManager em){
+		Order order1 = Order.builder()
+				.status(OrderStatus.ORDER)
+				.orderDate(new Date())
+				.build();
+
+//		System.out.println("before::::::::::" + order1.getMember().getClass());
+
+		em.persist(order1);
+		apply(em);
+
+		order1 = em.find(Order.class, 1);
+		System.out.println("after::::::::::" + order1.getMember().getClass());
+//		System.out.println(member1.getOrderList().get(0));
 	}
 
 	private static void queryDslTest(EntityManager em){
@@ -154,7 +188,7 @@ public class Main {
 		em.persist(member1);em.persist(member2);em.persist(member3);em.persist(member4);
 
 		Order order1 = Order.builder()
-				.member(member2)
+				.member(member1)
 				.status(OrderStatus.ORDER)
 				.orderDate(new Date())
 				.build();
