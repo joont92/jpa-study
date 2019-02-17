@@ -20,7 +20,7 @@ import java.util.List;
 		name = "Member.findByName",
 		query = "SELECT m FROM Member m WHERE m.name = :name"
 )
-public class Member extends BaseEntity{
+public class Member extends BaseEntity implements Memoable{
 	@Id
 	@GeneratedValue
 	private Integer id;
@@ -30,13 +30,15 @@ public class Member extends BaseEntity{
 	@Embedded
 	private Address homeAddress;
 
-//	@Embedded
-//	@AttributeOverrides({
-//			@AttributeOverride(name = "city", column = @Column(name = "company_city")),
-//			@AttributeOverride(name = "street", column = @Column(name = "company_street")),
-//			@AttributeOverride(name = "zipcode", column = @Column(name = "company_zipcode"))
-//	})
-//	private Address companyAddress;
+	private boolean test;
+
+	@Embedded
+	@AttributeOverrides({
+			@AttributeOverride(name = "city", column = @Column(name = "company_city")),
+			@AttributeOverride(name = "street", column = @Column(name = "company_street")),
+			@AttributeOverride(name = "zipcode", column = @Column(name = "company_zipcode"))
+	})
+	private Address companyAddress;
 
 	@Builder.Default
 	@ElementCollection
@@ -56,7 +58,8 @@ public class Member extends BaseEntity{
 	private List<Address> addressHistory = new ArrayList<>();
 
 	@Builder.Default
-	@OneToMany(mappedBy = "member")
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+//	@OrderBy("orderDate desc")
 	private List<Order> orderList = new ArrayList<>();
 
 	public void addOrder(Order order){

@@ -18,10 +18,10 @@ import java.util.List;
 @Table(name="ITEM")
 //@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 //@DiscriminatorColumn(name = "DTYPE")
-public /* abstract */ class Item {
+public /* abstract */ class Item implements Memoable{
 	@Id
 	@GeneratedValue
-	private int id;
+	private Integer id;
 
 	protected String name;
 

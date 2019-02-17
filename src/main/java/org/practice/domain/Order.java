@@ -16,11 +16,8 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name="ORDER_")
-public class Order extends BaseEntity{
-	@Id
-	@GeneratedValue
-	private int id;
-
+@DiscriminatorValue("O")
+public class Order extends OrderParent{
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;

@@ -45,9 +45,160 @@ public class Main {
 //		run(Main::nPlus1Test);
 //		nonTransacation();
 //		run(Main::queryDslTest);
-		run(Main::setLazyLoading);
+//		run(Main::readOnly);
+//		rollbackCheck();
+		run(Main::anyAssociationTest);
 
 		emf.close();
+	}
+
+	private static void anyAssociationTest(EntityManager em){
+		Member member = Member.builder()
+				.name("ziont")
+				.homeAddress(new Address("europe", "street1", "zipCode1"))
+				.build();
+
+		Item item = Item.builder()
+				.name("청바지")
+				.price(100000)
+				.stockQuantity(100)
+				.build();
+		em.persist(member);
+		em.persist(item);
+
+		Memo memo1 = new Memo();
+		memo1.setResource(member);
+		memo1.setContent("this is member memo");
+		Memo memo2 = new Memo();
+		memo2.setResource(item);
+		memo2.setContent("this is item memo");
+
+//		Memo memo1 = Memo.builder()
+//				.resource(member)
+//				.content("this is member memo")
+//				.build();
+//		Memo memo2 = Memo.builder()
+//				.resource(item)
+//				.content("this is member memo")
+//				.build();
+
+		em.persist(memo1);
+		em.persist(memo2);
+
+		apply(em);
+
+		Memo givenMemo1 = em.find(Memo.class, 3L);
+		Memo givenMemo2 = em.find(Memo.class, 4L);
+//		assertThat(givenMemo1.getResource().getId());
+		System.out.println("this command for debug");
+	}
+
+	private static void rollbackCheck(){
+		EntityManager em = emf.createEntityManager();
+
+		EntityTransaction tx = em.getTransaction();
+
+		try {
+			tx.begin();
+
+			Member member = em.find(Member.class, 1);
+			member.setName("DDDD");
+
+			Member willFailMember = em.getReference(Member.class, 2222);
+			willFailMember.getName();
+
+//			Member willFailMember = em.createQuery("select m from Member m where m.id = 9999", Member.class)
+//					.getSingleResult();
+//			willFailMember.getName();
+
+			tx.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+//			tx.rollback();
+			tx.commit();
+		} finally {
+			em.close();
+		}
+	}
+
+	private static void readOnly(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Member member1 = em.createQuery("select m from Member m where m.id = :id", Member.class)
+				.setParameter("id", 1)
+				.setHint("org.hibernate.readOnly", true)
+				.getSingleResult();
+		Member member2 = em.createQuery("select m from Member m where m.id = :id", Member.class)
+				.setParameter("id", 1)
+				.setHint("org.hibernate.readOnly", true)
+				.getSingleResult();
+
+		System.out.println(member1);
+		System.out.println(member2);
+	}
+
+	private static void noResultException(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Member member = em.find(Member.class, 1);
+
+		try{
+//			Member emptyMember =
+//					em.createQuery("select m from Member m where m.name = 'test'", Member.class)
+//					.getSingleResult();
+			Member emptyMember = em.find(Member.class, 1000);
+		}catch (EntityNotFoundException e){
+
+		}
+
+
+		member.setName("test");
+	}
+
+	private static void cascadeRemoveTest(EntityManager em){
+		Member member = Member.builder().build();
+		Order order1 = Order.builder().build();
+		Order order2 = Order.builder().build();
+
+		member.addOrder(order1);
+		member.addOrder(order2);
+
+		em.merge(member);
+
+		Member givenMember = Member.builder().id(1).build();
+		Order givenOrder = Order.builder().build();
+		givenOrder.setId(2);
+		givenMember.addOrder(givenOrder);
+
+		Member testMember = em.merge(givenMember);
+		testMember.getOrderList().get(0);
+		System.out.println(":::");
+	}
+
+
+	private static void converter(EntityManager em){
+		Member member = Member.builder().test(true).build();
+		em.persist(member);
+	}
+
+	private static void orderColumn(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Member member = em.find(Member.class, 1);
+		member.getOrderList().get(0);
+	}
+
+	private static void nosession(EntityManager em){
+		addEntities(em);
+		apply(em);
+
+		Member member = em.find(Member.class, 1);
+		apply(em);
+
+		member.getOrderList().get(0);
 	}
 
 	private static void setLazyLoading(EntityManager em){
@@ -58,6 +209,8 @@ public class Main {
 
 		Order order = Order.builder().build();
 		member.getOrderList().add(order);
+//		member.getOrderList().contains(order);
+//		member.getOrderList().remove(order);
 	}
 
 
@@ -101,7 +254,7 @@ public class Main {
 		em.createNativeQuery("SELECT id FROM Item WHERE id=7")
 				.getSingleResult();
 	}
-	
+
 	private static void fuckingMergeTest(EntityManager em){
 		addEntities(em);
 		apply(em);
@@ -217,7 +370,7 @@ public class Main {
 		em.persist(item1);em.persist(item2);em.persist(item3);
 	}
 
-	private static void cascadeTest(EntityManager em){
+	private static void cascadeTest2(EntityManager em){
 		Member member = Member.builder()
 				.name("joont")
 				.homeAddress(new Address("seoul", "street", "zipCode1"))
@@ -254,7 +407,7 @@ public class Main {
 		member.addOrder(order3);
 	}
 
-	private static void addTest(EntityManager em){
+	private static void addTest2(EntityManager em){
 		Member member = Member.builder()
 				.name("joont")
 				.homeAddress(new Address("seoul", "street", "zipCode1"))
@@ -445,203 +598,203 @@ public class Main {
 		member.addOrder(order2);
 	}
 
-	public static void mergeActionTest(EntityManager em){
-		Member member = Member.builder()
-//				.id(2)
-				.name("joont")
-				.homeAddress(new Address("city", "street", "zipCode1"))
-				.build();
-		em.merge(member);
-	}
-
-	public static void changeIdentifier(EntityManager em){
-		Member member = Member.builder()
-				.name("joont")
-				.homeAddress(new Address("city", "street", "zipCode1"))
-				.build();
-		em.persist(member);
-
-		Member member_ = Member.builder()
-				.name("joont2")
-				.homeAddress(new Address("city", "street", "zipCode1"))
-				.build();
-
-		Order order1_ = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		Order order2_ = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-
-		member_.addOrder(order1_);
-		member_.addOrder(order2_);
-
-		em.persist(member_);
-
-		em.flush();
-		em.clear();
-
-		/*
-		TypedQuery<Member> query = em.createQuery("SELECT m FROM Member m INNER JOIN FETCH m.orderList", Member.class);
-		query.setFirstResult(1);
-		query.setMaxResults(3);
-		List<Member> list = query.getResultList();
-		System.out.println("::::::::::::::" + list.size());
-		*/
-
-		/*
-		TypedQuery<Order> query =
-				em.createQuery("select o from Order o where exists (select m from o.member m where m.name = 'joont')", Order.class);
-
-		query.getResultList();
-		*/
-
-		TypedQuery<String> query = em.createQuery("select TRIM(LEADING 'j' FROM m.name) from Member m", String.class);
-		List<String> list = query.getResultList();
-		for (String s : list) {
-			System.out.println("::::::::" + s);
-		}
-	}
-
-	private static void jpqlQueryTest(EntityManager em){
-		em.persist(Member.builder()
-				.name("joont1")
-				.homeAddress(new Address("city", "street", "zipCode1"))
-				.build());
-		em.persist(Member.builder()
-				.name("joont2")
-				.homeAddress(new Address("city", "street", "zipCode2"))
-				.build());
-		em.persist(Member.builder()
-				.name("joont3")
-				.homeAddress(new Address("citadel", "street", "zipCode3"))
-				.build());
-		Order order1 = Order.builder()
-				.member(em.getReference(Member.class, 1))
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		em.persist(order1);
-		Order order2 = Order.builder()
-				.member(em.getReference(Member.class, 3))
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		em.persist(order2);
-
-		em.flush();
-		em.clear();
-
-		/*
-		TypedQuery<Member> query = em.createQuery("select m from Member m where m.name = 'joont1'", Member.class);
-		List<Member> memberList = query.getResultList();
-		assertThat(memberList.size(), is(1));
-		*/
-
-		/*
-		TypedQuery<Long> query = em.createQuery("select count(distinct m.homeAddress.city) from Member m", Long.class);
-		assertThat(query.getSingleResult(), is(1L));
-		*/
-
-//		TypedQuery<Long> query =
-//				em.createQuery("select count(o) from Order o group by o.member.homeAddress.city", Long.class);
-
-		TypedQuery<Long> query =
-				em.createQuery("select count(o) from Order o LEFT JOIN o.member m " +
-						"group by m.homeAddress.city", Long.class);
-		query.getResultList();
-	}
-
-	private static void deleteTest(EntityManager em){
-		Member member = Member.builder()
-				.name("joont")
-				.homeAddress(new Address("city", "street", "zipCode1"))
-				.build();
-
-		Order order1 = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		Order order2 = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-
-		member.addOrder(order1);
-		member.addOrder(order2);
-
-		em.persist(member);
-
-		em.flush();
-		em.clear();
-
-		Member foundMember = em.find(Member.class, 1);
-		Order order3 = Order.builder()
-				.status(OrderStatus.ORDER)
-				.orderDate(new Date())
-				.build();
-		foundMember.addOrder(order3);
-//		List<Order> orderList = foundMember.getOrderList();
-//		for (Order order : orderList) {
-//			em.remove(order);
+//	public static void mergeActionTest(EntityManager em){
+//		Member member = Member.builder()
+////				.id(2)
+//				.name("joont")
+//				.homeAddress(new Address("city", "street", "zipCode1"))
+//				.build();
+//		em.merge(member);
+//	}
+//
+//	public static void changeIdentifier(EntityManager em){
+//		Member member = Member.builder()
+//				.name("joont")
+//				.homeAddress(new Address("city", "street", "zipCode1"))
+//				.build();
+//		em.persist(member);
+//
+//		Member member_ = Member.builder()
+//				.name("joont2")
+//				.homeAddress(new Address("city", "street", "zipCode1"))
+//				.build();
+//
+//		Order order1_ = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//		Order order2_ = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//
+//		member_.addOrder(order1_);
+//		member_.addOrder(order2_);
+//
+//		em.persist(member_);
+//
+//		em.flush();
+//		em.clear();
+//
+//		/*
+//		TypedQuery<Member> query = em.createQuery("SELECT m FROM Member m INNER JOIN FETCH m.orderList", Member.class);
+//		query.setFirstResult(1);
+//		query.setMaxResults(3);
+//		List<Member> list = query.getResultList();
+//		System.out.println("::::::::::::::" + list.size());
+//		*/
+//
+//		/*
+//		TypedQuery<Order> query =
+//				em.createQuery("select o from Order o where exists (select m from o.member m where m.name = 'joont')", Order.class);
+//
+//		query.getResultList();
+//		*/
+//
+//		TypedQuery<String> query = em.createQuery("select TRIM(LEADING 'j' FROM m.name) from Member m", String.class);
+//		List<String> list = query.getResultList();
+//		for (String s : list) {
+//			System.out.println("::::::::" + s);
 //		}
-//		orderList.clear();
-	}
-
-	private static void elementCollectionTest(EntityManager em){
-		// add
-		Member member = Member.builder()
-				.name("joont1")
-				.build();
-
-		member.setHomeAddress(new Address("city", "street", "zipCode4"));
-		member.getFavoriteFoodList().add("pork");
-		member.getFavoriteFoodList().add("beef");
-
-		member.getAddressHistory().add(new Address("city1", "street1", "zipcode1"));
-		member.getAddressHistory().add(new Address("city2", "street2", "zipcode2"));
-		member.getAddressHistory().add(new Address("city3", "street3", "zipcode3"));
-
-		em.persist(member);
-
-		// clear
-		em.flush();
-		em.clear();
-
-		// modify
-		 member = em.find(Member.class, 1);
-		List<String> favoriteFoodList = member.getFavoriteFoodList();
-		favoriteFoodList.set(0, "changed pork");
-		favoriteFoodList.set(1, "changed beef");
-
-		List<Address> addressHisotry = member.getAddressHistory();
-		addressHisotry.get(0).setStreet("changed street");
-	}
-
-	private static void shareEmbedded(EntityManager em){
-		Address address1 = new Address("city", "street", "zipCode1");
-		Address address2 = address1;
-		address2.setZipcode("zipcode2");
-
-		Member member1 = Member.builder()
-				.name("joont1")
-				.homeAddress(address1)
-				.build();
-		Member member2 = Member.builder()
-				.name("joont2")
-				.homeAddress(address2)
-				.build();
-		em.persist(member1);
-		em.persist(member2);
-
-		em.flush();
-		em.clear();
-
-
-	}
-
+//	}
+//
+//	private static void jpqlQueryTest(EntityManager em){
+//		em.persist(Member.builder()
+//				.name("joont1")
+//				.homeAddress(new Address("city", "street", "zipCode1"))
+//				.build());
+//		em.persist(Member.builder()
+//				.name("joont2")
+//				.homeAddress(new Address("city", "street", "zipCode2"))
+//				.build());
+//		em.persist(Member.builder()
+//				.name("joont3")
+//				.homeAddress(new Address("citadel", "street", "zipCode3"))
+//				.build());
+//		Order order1 = Order.builder()
+//				.member(em.getReference(Member.class, 1))
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//		em.persist(order1);
+//		Order order2 = Order.builder()
+//				.member(em.getReference(Member.class, 3))
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//		em.persist(order2);
+//
+//		em.flush();
+//		em.clear();
+//
+//		/*
+//		TypedQuery<Member> query = em.createQuery("select m from Member m where m.name = 'joont1'", Member.class);
+//		List<Member> memberList = query.getResultList();
+//		assertThat(memberList.size(), is(1));
+//		*/
+//
+//		/*
+//		TypedQuery<Long> query = em.createQuery("select count(distinct m.homeAddress.city) from Member m", Long.class);
+//		assertThat(query.getSingleResult(), is(1L));
+//		*/
+//
+////		TypedQuery<Long> query =
+////				em.createQuery("select count(o) from Order o group by o.member.homeAddress.city", Long.class);
+//
+//		TypedQuery<Long> query =
+//				em.createQuery("select count(o) from Order o LEFT JOIN o.member m " +
+//						"group by m.homeAddress.city", Long.class);
+//		query.getResultList();
+//	}
+//
+//	private static void deleteTest(EntityManager em){
+//		Member member = Member.builder()
+//				.name("joont")
+//				.homeAddress(new Address("city", "street", "zipCode1"))
+//				.build();
+//
+//		Order order1 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//		Order order2 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//
+//		member.addOrder(order1);
+//		member.addOrder(order2);
+//
+//		em.persist(member);
+//
+//		em.flush();
+//		em.clear();
+//
+//		Member foundMember = em.find(Member.class, 1);
+//		Order order3 = Order.builder()
+//				.status(OrderStatus.ORDER)
+//				.orderDate(new Date())
+//				.build();
+//		foundMember.addOrder(order3);
+////		List<Order> orderList = foundMember.getOrderList();
+////		for (Order order : orderList) {
+////			em.remove(order);
+////		}
+////		orderList.clear();
+//	}
+//
+//	private static void elementCollectionTest(EntityManager em){
+//		// add
+//		Member member = Member.builder()
+//				.name("joont1")
+//				.build();
+//
+//		member.setHomeAddress(new Address("city", "street", "zipCode4"));
+//		member.getFavoriteFoodList().add("pork");
+//		member.getFavoriteFoodList().add("beef");
+//
+//		member.getAddressHistory().add(new Address("city1", "street1", "zipcode1"));
+//		member.getAddressHistory().add(new Address("city2", "street2", "zipcode2"));
+//		member.getAddressHistory().add(new Address("city3", "street3", "zipcode3"));
+//
+//		em.persist(member);
+//
+//		// clear
+//		em.flush();
+//		em.clear();
+//
+//		// modify
+//		 member = em.find(Member.class, 1);
+//		List<String> favoriteFoodList = member.getFavoriteFoodList();
+//		favoriteFoodList.set(0, "changed pork");
+//		favoriteFoodList.set(1, "changed beef");
+//
+//		List<Address> addressHisotry = member.getAddressHistory();
+//		addressHisotry.get(0).setStreet("changed street");
+//	}
+//
+//	private static void shareEmbedded(EntityManager em){
+//		Address address1 = new Address("city", "street", "zipCode1");
+//		Address address2 = address1;
+//		address2.setZipcode("zipcode2");
+//
+//		Member member1 = Member.builder()
+//				.name("joont1")
+//				.homeAddress(address1)
+//				.build();
+//		Member member2 = Member.builder()
+//				.name("joont2")
+//				.homeAddress(address2)
+//				.build();
+//		em.persist(member1);
+//		em.persist(member2);
+//
+//		em.flush();
+//		em.clear();
+//
+//
+//	}
+//
 //	private static void 준영속Test(EntityManager em){
 //		Member member = Member.builder()
 //				.id(12)
